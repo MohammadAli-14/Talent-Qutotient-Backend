@@ -1,5 +1,4 @@
 import express from "express";
-import path from "path";
 import cors from "cors";
 import { serve } from "inngest/express";
 import { clerkMiddleware } from "@clerk/express";
@@ -13,92 +12,84 @@ import sessionRoute from "./routes/sessionRoute.js";
 
 const app = express();
 
-// Request logging middleware
+// 1. Logging Middleware (Helps debug on Render logs)
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
-// middleware
+// 2. CORS Configuration
+// This explicitly handles the frontend URL with or without trailing slashes
+const allowedOrigins = [
+  ENV.CLIENT_URL,                    // The URL from your .env file
+  "https://talent-quotient-frontend.vercel.app", // Hardcoded fallback
+  "http://localhost:5173"            // Local development
+];
+
 app.use(express.json());
 app.use(cors({
-  origin: ENV.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin is allowed
+    // We maintain a list of valid origins to prevent CORS errors
+    const isAllowed = allowedOrigins.some(allowedOrigin => 
+      origin === allowedOrigin || origin === allowedOrigin + "/"
+    );
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log("Blocked by CORS:", origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// 3. Auth Middleware
 app.use(clerkMiddleware());
 
-// API Routes
+// 4. Routes
 app.use("/api/inngest", serve({ client: inngest, functions }));
 app.use("/api/chat", chatRoutes);
 app.use("/api/sessions", sessionRoute);
 
-// Health check
+// Health Check
 app.get("/api/health", (req, res) => {
   res.status(200).json({ 
     status: "OK", 
-    timestamp: new Date().toISOString(),
-    environment: ENV.NODE_ENV,
-    routes: ["/api/chat", "/api/sessions", "/api/inngest"]
+    dbState: "Connected", 
+    environment: ENV.NODE_ENV 
   });
 });
 
-// Test route without authentication
-app.get("/api/test", (req, res) => {
-  res.status(200).json({ message: "API is working without auth" });
-});
-
-// Protected test route
-app.get("/api/test-protected", (req, res) => {
-  console.log("Auth header:", req.headers.authorization);
-  res.status(200).json({ message: "Protected route is working" });
-});
-
-// Root route - optional, shows API is running
+// Root Route
 app.get("/", (req, res) => {
-  res.status(200).json({ 
-    message: "Talent Quotient Backend API",
-    version: "1.0.0",
-    status: "running",
-    environment: ENV.NODE_ENV,
-    documentation: "Use /api endpoints for API access"
-  });
+  res.status(200).json({ message: "Talent Quotient API is Running" });
 });
 
-// 404 Handler - Express 5 compatible
-app.use((req, res) => {
-  res.status(404).json({ 
-    error: "Not Found",
-    message: `Route ${req.method} ${req.url} not found`,
-    availableRoutes: [
-      "/",
-      "/api/health",
-      "/api/chat",
-      "/api/sessions",
-      "/api/test",
-      "/api/test-protected",
-      "/api/inngest"
-    ]
-  });
-});
-
-// Error handling middleware
+// Error Handler
 app.use((err, req, res, next) => {
-  console.error("Server error:", err);
+  console.error("Global Error:", err);
   res.status(500).json({ 
-    error: "Internal Server Error",
-    message: ENV.NODE_ENV === "development" ? err.message : "Something went wrong"
+    error: "Internal Server Error", 
+    message: err.message 
   });
 });
 
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(ENV.PORT, () => console.log("Server is running on port:", ENV.PORT));
+    console.log("✅ Database connected successfully");
+    const PORT = ENV.PORT || 3000;
+    app.listen(PORT, () => console.log(`🚀 Server running on port: ${PORT}`));
   } catch (error) {
-    console.error("💥 Error starting the server", error);
+    console.error("💥 Failed to start server:", error);
+    process.exit(1);
   }
 };
 
