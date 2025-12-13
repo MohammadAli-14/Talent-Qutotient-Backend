@@ -13,8 +13,6 @@ import sessionRoute from "./routes/sessionRoute.js";
 
 const app = express();
 
-const __dirname = path.resolve();
-
 // Request logging middleware
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
@@ -58,14 +56,42 @@ app.get("/api/test-protected", (req, res) => {
   res.status(200).json({ message: "Protected route is working" });
 });
 
-// make our app ready for deployment
-if (ENV.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
-  app.get("/{*any}", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+// Root route - optional, shows API is running
+app.get("/", (req, res) => {
+  res.status(200).json({ 
+    message: "Talent Quotient Backend API",
+    version: "1.0.0",
+    status: "running",
+    environment: ENV.NODE_ENV,
+    documentation: "Use /api endpoints for API access"
   });
-}
+});
+
+// 404 Handler - Express 5 compatible
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: "Not Found",
+    message: `Route ${req.method} ${req.url} not found`,
+    availableRoutes: [
+      "/",
+      "/api/health",
+      "/api/chat",
+      "/api/sessions",
+      "/api/test",
+      "/api/test-protected",
+      "/api/inngest"
+    ]
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Server error:", err);
+  res.status(500).json({ 
+    error: "Internal Server Error",
+    message: ENV.NODE_ENV === "development" ? err.message : "Something went wrong"
+  });
+});
 
 const startServer = async () => {
   try {
