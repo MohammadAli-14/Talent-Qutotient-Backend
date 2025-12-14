@@ -2,110 +2,112 @@
 
 <div align="center">
 
-**Node.js backend API for collaborative coding interviews with real-time communication**
+**Node.js backend API for collaborative coding interviews with RESTful endpoints and Stream.io integration**
 
-[![Backend API](https://img.shields.io/badge/🚀_Backend_API-Running-blue?style=for-the-badge)](https://your-backend-url.com)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-4.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-6.x-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://mongodb.com/)
-[![Socket.io](https://img.shields.io/badge/Socket.io-4.x-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
+[![Stream.io](https://img.shields.io/badge/Stream.io-Chat_&_Video-7E57C2?style=for-the-badge)](https://getstream.io/)
 
 </div>
 
 ## 🎯 Overview
 
-Talent Quotient Backend is a robust Node.js and Express.js API that powers the Talent Quotient coding interview platform. It provides RESTful endpoints for session management, user authentication, real-time communication via WebSockets, and seamless integration with MongoDB for data persistence.
+Talent Quotient Backend is a robust Node.js and Express.js API that powers the collaborative coding interview platform. It provides RESTful endpoints for session management, user authentication, and data persistence, while delegating all real-time communication features to the **Stream.io service**.
 
-This backend is designed to handle real-time collaborative coding sessions, video call signaling, and live code execution coordination between interviewers and candidates.
+This backend acts as the central data hub for:
+*   **Session Management:** Creating, updating, and tracking interview sessions.
+*   **User Authentication:** Handling registration, login, and JWT-based security.
+*   **Data Persistence:** Storing session data, user profiles, and chat history in MongoDB.
+*   **Stream.io Integration:** Generating tokens and managing Stream.io channels for real-time features.
 
-## ✨ Features
+## 🏗️ Architecture & Technology Stack
 
-### **Core API Features**
-- **RESTful API**: Comprehensive endpoints for session management and user operations
-- **Real-time WebSocket Support**: Socket.io integration for live code collaboration and chat
-- **JWT Authentication**: Secure user authentication with JSON Web Tokens
-- **MongoDB Integration**: Scalable NoSQL database with Mongoose ODM
-- **Session Management**: Full CRUD operations for interview sessions
-- **File Streaming**: Efficient handling of large responses and file operations
+The platform uses a clean separation of concerns between the Express backend and the Stream.io service:
 
-### **Real-time Capabilities**
-- **Live Code Synchronization**: Real-time code updates across multiple users
-- **WebSocket Communication**: Bi-directional communication for chat and notifications
-- **Session State Management**: Track active sessions and participant states
-- **Event Broadcasting**: Real-time event propagation to connected clients
+| Component | Technology | Primary Responsibility |
+| :--- | :--- | :--- |
+| **Backend API** | Node.js + Express | RESTful endpoints, business logic, data persistence, authentication |
+| **Database** | MongoDB + Mongoose | Data storage for users, sessions, and historical data |
+| **Real-time Services** | **Stream.io** | **All real-time features:** chat messaging, video calls, live code collaboration, typing indicators |
+| **Frontend** | React + Vite | User interface that connects to both Backend API and Stream.io directly |
 
-### **Security & Performance**
-- **Protected Routes**: Middleware for authentication and authorization
-- **CORS Configuration**: Secure cross-origin resource sharing
-- **Input Validation**: Request validation and sanitization
-- **Error Handling**: Comprehensive error responses and logging
-- **Environment Configuration**: Secure management of sensitive data
+**How it works:** Your React frontend communicates with **two separate services**:
+1.  **This Express Backend** (`http://localhost:3000/api`): For authenticated REST API calls (create session, get user data).
+2.  **Stream.io Service** (via their SDK): For all real-time interactions (chat, video, code sync).
 
-## 🏗️ Project Structure
+This backend facilitates the Stream.io integration by generating secure access tokens for users.
+
+## ✨ Core Backend Features
+
+### **REST API & Business Logic**
+*   **RESTful API:** Comprehensive endpoints for user management and session operations.
+*   **JWT Authentication:** Secure stateless authentication for API access.
+*   **Session Management:** Full CRUD operations for interview sessions with MongoDB persistence.
+*   **Stream.io Token Generation:** Creates secure tokens for frontend to connect to Stream.io services.
+
+### **Data Management & Security**
+*   **MongoDB Integration:** Scalable NoSQL database with Mongoose ODM.
+*   **Data Models:** Well-structured schemas for users, sessions, and relationships.
+*   **Protected Routes:** Middleware for API authorization and role-based access.
+*   **CORS Configuration:** Secure cross-origin resource sharing for the frontend.
+*   **Environment Configuration:** Centralized management of sensitive keys and settings.
+
+## 📁 Project Structure
 
 ```
-├── .gitignore                    # Git ignore configuration
-├── package.json                  # Dependencies and scripts
-├── package-lock.json             # Lock file for dependencies
+├── .gitignore
+├── package.json
+├── package-lock.json
 └── src/
-    ├── controllers/              # Request handlers
-    │   ├── chatController.js     # Chat-related operations
-    │   └── sessionController.js  # Session management operations
-    ├── lib/                      # Core utilities and configurations
-    │   ├── db.js                 # MongoDB connection setup
-    │   ├── env.js                # Environment configuration loader
-    │   ├── inngest.js            # Background job processing (Inngest)
-    │   └── stream.js             # Stream processing utilities
-    ├── middleware/               # Express middleware
-    │   └── protectRoute.js       # Route protection and authentication
-    ├── models/                   # MongoDB schema definitions
-    │   ├── Session.js            # Session model and schema
-    │   └── User.js               # User model and schema
-    ├── routes/                   # API route definitions
-    │   ├── chatRoutes.js         # Chat-related API routes
-    │   └── sessionRoute.js       # Session-related API routes
-    └── server.js                 # Application entry point
+    ├── controllers/           # Request handlers for HTTP API
+    │   ├── chatController.js  # Manages chat-related API calls
+    │   └── sessionController.js # Manages session operations
+    ├── lib/                  # Core utilities and configurations
+    │   ├── db.js            # MongoDB connection setup
+    │   ├── env.js           # Environment configuration
+    │   ├── inngest.js       # Background job processing (optional)
+    │   └── stream.js        # Stream.io service integration and token generation
+    ├── middleware/          # Express middleware
+    │   └── protectRoute.js  # JWT authentication middleware
+    ├── models/              # MongoDB schema definitions
+    │   ├── Session.js       # Session data model
+    │   └── User.js          # User data model
+    ├── routes/              # API route definitions
+    │   ├── chatRoutes.js    # Chat-related routes
+    │   └── sessionRoute.js  # Session-related routes
+    └── server.js           # Main application entry point
 ```
 
 ## 🚀 Quick Start
 
 ### **Prerequisites**
-- Node.js (v16 or higher)
-- MongoDB (v4.4 or higher)
-- npm or yarn
+*   Node.js (v18 or higher)
+*   MongoDB (v6.0 or higher)
+*   Stream.io account (for chat and video features)
+*   npm or yarn
 
-### **1. Clone the Repository**
+### **1. Clone and Install**
 ```bash
 git clone https://github.com/MohammadAli-14/Talent-Qutotient-Backend.git
 cd Talent-Qutotient-Backend
-```
-
-### **2. Install Dependencies**
-```bash
 npm install
-# or
-yarn install
 ```
 
-### **3. Configure Environment Variables**
+### **2. Configure Environment**
 ```bash
-# Copy the example environment file
 cp .env.example .env
-
-# Edit the .env file with your configuration
+# Edit the .env file with your configuration (see below)
 ```
 
-### **4. Start the Development Server**
+### **3. Start Development Server**
 ```bash
 npm run dev
 ```
+The REST API will be available at `http://localhost:3000`
 
-The API will be available at `http://localhost:3000`
-
-## ⚙️ Environment Configuration
-
-Create a `.env` file in the root directory with the following variables:
+## ⚙️ Environment Configuration (`.env`)
 
 ```env
 # Server Configuration
@@ -114,130 +116,97 @@ NODE_ENV=development
 
 # MongoDB Configuration
 MONGODB_URI=mongodb://localhost:27017/talent-quotient
-MONGODB_DB_NAME=talent-quotient
 
 # JWT Authentication
-JWT_SECRET=your_jwt_secret_key_here_change_this_in_production
-JWT_EXPIRE=7d
+JWT_SECRET=your_super_secret_jwt_key_change_this_in_production
 
-# CORS Configuration (for frontend integration)
+# CORS (for frontend)
 CORS_ORIGIN=http://localhost:5173
 
-# WebSocket Configuration
-WS_PATH=/socket.io
+# Stream.io Configuration (REQUIRED for real-time features)
+STREAM_API_KEY=your_stream_io_api_key
+STREAM_API_SECRET=your_stream_io_api_secret
+STREAM_APP_ID=your_stream_io_app_id
 
 # Optional: Background Job Processing (Inngest)
-# INNGEST_EVENT_KEY=your_inngest_event_key
-# INNGEST_SIGNING_KEY=your_inngest_signing_key
-# INNGEST_BASE_URL=your_inngest_base_url
+INNGEST_EVENT_KEY=your_inngest_event_key
+INNGEST_SIGNING_KEY=your_inngest_signing_key
+INNGEST_BASE_URL=your_inngest_base_url
 ```
 
 ## 🛠️ Available Scripts
 
 ```bash
-# Development
 npm run dev        # Start development server with nodemon
 npm start          # Start production server
-npm run lint       # Lint code with ESLint (if configured)
-
-# Database
-npm run db:seed    # Seed database with sample data (if configured)
-npm run db:reset   # Reset database (if configured)
-
-# Testing
-npm test           # Run test suite
-npm run test:watch # Run tests in watch mode
-npm run test:cov   # Generate test coverage report
+npm test           # Run tests (if configured)
 ```
 
-## 📦 Dependencies
-
-### **Core Dependencies**
-- **express**: Fast, unopinionated web framework for Node.js
-- **mongoose**: MongoDB object modeling for Node.js
-- **jsonwebtoken**: JSON Web Token implementation
-- **socket.io**: Real-time bidirectional event-based communication
-- **cors**: Express middleware for CORS configuration
-- **dotenv**: Loads environment variables from .env file
-- **bcryptjs**: Optimized bcrypt for hashing passwords
-- **helmet**: Security middleware for Express
-
-### **Development Dependencies**
-- **nodemon**: Automatically restart server during development
-- **eslint**: Code linting utility
-- **mocha/chai**: Testing framework and assertion library
-- **supertest**: HTTP assertion testing
-
-## 🔌 API Endpoints
-
-### **Base URL**
-```
-http://localhost:3000/api
-```
+## 🔌 REST API Endpoints
 
 ### **Authentication Endpoints**
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Authenticate user and return JWT
-- `GET /api/auth/me` - Get current user profile (protected)
-- `POST /api/auth/logout` - Logout user (invalidate token)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST   | `/api/auth/register` | Register a new user | No |
+| POST   | `/api/auth/login` | Authenticate user and get JWT token | No |
+| GET    | `/api/auth/me` | Get current user profile | Yes |
+| POST   | `/api/auth/stream-token` | Generate Stream.io token for current user | Yes |
 
 ### **Session Management**
-- `POST /api/sessions/create` - Create a new interview session
-- `GET /api/sessions` - List all sessions (with filters)
-- `GET /api/sessions/:id` - Get specific session details
-- `PUT /api/sessions/:id` - Update session information
-- `DELETE /api/sessions/:id` - Delete a session
-- `GET /api/sessions/user/:userId` - Get sessions for a specific user
-- `POST /api/sessions/:id/join` - Join an existing session
-- `POST /api/sessions/:id/leave` - Leave a session
 
-### **Real-time Chat**
-- `POST /api/chat/new` - Create a new chat session
-- `GET /api/chat/:sessionId` - Get chat history for a session
-- `POST /api/chat/message` - Send a chat message
-- WebSocket events for real-time messaging
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST   | `/api/sessions/create` | Create a new interview session | Yes |
+| GET    | `/api/sessions` | List all sessions (with pagination/filters) | Yes |
+| GET    | `/api/sessions/:id` | Get session details | Yes |
+| PUT    | `/api/sessions/:id` | Update session information | Yes |
+| DELETE | `/api/sessions/:id` | Delete a session | Yes |
+| GET    | `/api/sessions/user/:userId` | Get all sessions for a specific user | Yes |
+| POST   | `/api/sessions/:id/join` | Join an existing session | Yes |
+| POST   | `/api/sessions/:id/leave` | Leave a session | Yes |
 
-### **WebSocket Events**
-- **Connection**: `connection` - Client connects to WebSocket
-- **Session Events**:
-  - `join-session` - Join a coding session
-  - `leave-session` - Leave a session
-  - `session-update` - Session state changes
-- **Code Collaboration**:
-  - `code-update` - Real-time code changes
-  - `cursor-position` - Live cursor positions
-  - `code-execution` - Code execution requests
-- **Chat Events**:
-  - `chat-message` - Send/receive chat messages
-  - `typing-indicator` - Show typing status
+### **Chat & Data Endpoints**
 
-## 🔐 Authentication System
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST   | `/api/chat/channel` | Create a Stream.io chat channel for a session | Yes |
+| GET    | `/api/chat/history/:sessionId` | Get chat history from database | Yes |
+| POST   | `/api/chat/save-message` | Save chat message to database (for history) | Yes |
+
+## 🔐 Authentication & Stream.io Integration
 
 ### **JWT Authentication Flow**
 1. User registers or logs in via `/api/auth/register` or `/api/auth/login`
 2. Server validates credentials and returns a JWT token
-3. Client includes token in `Authorization` header for protected routes
-4. `protectRoute` middleware validates token on each request
+3. Client includes token in `Authorization` header for all protected API calls
 
-### **Protected Route Example**
+### **Stream.io Token Generation**
+The backend generates Stream.io tokens so the frontend can connect directly to Stream.io services:
+
 ```javascript
-// Middleware usage in routes
-router.get('/profile', protectRoute, (req, res) => {
-  // req.user contains authenticated user data
-  res.json({ user: req.user });
+// Example route handler for generating Stream.io tokens
+app.post('/api/auth/stream-token', protectRoute, async (req, res) => {
+  try {
+    const { StreamChat } = require('stream-chat');
+    const serverClient = StreamChat.getInstance(
+      process.env.STREAM_API_KEY, 
+      process.env.STREAM_API_SECRET
+    );
+    
+    const token = serverClient.createToken(req.user.id);
+    res.json({ token, api_key: process.env.STREAM_API_KEY });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to generate Stream token' });
+  }
 });
 ```
 
-### **Client-Side Token Usage**
-```javascript
-// Include token in requests
-const config = {
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
-};
-axios.get('/api/profile', config);
-```
+### **Frontend Integration**
+Your React frontend will:
+1. Get a JWT token from this backend for API authentication
+2. Get a Stream.io token from this backend for real-time services
+3. Use the Stream.io SDK to connect to chat and video features
 
 ## 🗄️ Database Models
 
@@ -248,7 +217,8 @@ axios.get('/api/profile', config);
   password: { type: String, required: true },
   name: { type: String, required: true },
   role: { type: String, enum: ['interviewer', 'candidate'], default: 'candidate' },
-  avatar: { type: String }, // URL to avatar image
+  streamId: { type: String, unique: true }, // Matches Stream.io user ID
+  avatar: { type: String },
   sessions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Session' }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
@@ -262,163 +232,99 @@ axios.get('/api/profile', config);
   description: { type: String },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  problemId: { type: String }, // Reference to problem in frontend
+  problemId: { type: String }, // Reference to coding problem
   language: { type: String, default: 'javascript' },
   status: { 
     type: String, 
-    enum: ['active', 'completed', 'cancelled'], 
-    default: 'active' 
+    enum: ['scheduled', 'active', 'completed', 'cancelled'], 
+    default: 'scheduled' 
   },
-  chatHistory: [{
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    message: { type: String },
-    timestamp: { type: Date, default: Date.now }
-  }],
+  streamChannelId: { type: String }, // Associated Stream.io channel ID
   startTime: { type: Date },
   endTime: { type: Date },
+  duration: { type: Number }, // Duration in minutes
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 }
 ```
 
-## 🔄 Real-time Communication
+## 🔄 Stream.io Integration Details
 
-### **WebSocket Server Setup**
+### **Backend Responsibilities for Stream.io**
+1. **User Synchronization:** Ensure user profiles exist in both MongoDB and Stream.io
+2. **Token Generation:** Create secure tokens for frontend Stream.io connections
+3. **Channel Management:** Create and manage Stream.io channels for each session
+4. **Webhook Handling:** Process Stream.io webhooks for server-side events
+
+### **Example: Creating a Stream.io Channel for a Session**
 ```javascript
-// server.js - WebSocket configuration
-const socketIO = require('socket.io');
-const http = require('http');
-
-const server = http.createServer(app);
-const io = socketIO(server, {
-  cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
-    methods: ['GET', 'POST']
-  },
-  path: process.env.WS_PATH || '/socket.io'
-});
-
-io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
-  
-  // Handle session joining
-  socket.on('join-session', (sessionId) => {
-    socket.join(sessionId);
-    socket.to(sessionId).emit('user-joined', { userId: socket.id });
-  });
-  
-  // Handle code updates
-  socket.on('code-update', ({ sessionId, code }) => {
-    socket.to(sessionId).emit('code-updated', { code, userId: socket.id });
-  });
-  
-  // Handle disconnection
-  socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-  });
-});
+// In your session controller
+const createSession = async (req, res) => {
+  try {
+    // 1. Create session in MongoDB
+    const session = new Session({ ...req.body, createdBy: req.user.id });
+    
+    // 2. Create Stream.io channel for this session
+    const { StreamChat } = require('stream-chat');
+    const serverClient = StreamChat.getInstance(
+      process.env.STREAM_API_KEY, 
+      process.env.STREAM_API_SECRET
+    );
+    
+    const channelId = `session-${session._id}`;
+    const channel = serverClient.channel('messaging', channelId, {
+      name: session.title,
+      created_by_id: req.user.id,
+      members: [req.user.id], // Initial member
+      sessionData: {
+        sessionId: session._id.toString(),
+        problemId: session.problemId,
+        language: session.language
+      }
+    });
+    
+    await channel.create();
+    
+    // 3. Update session with channel ID
+    session.streamChannelId = channelId;
+    await session.save();
+    
+    res.status(201).json(session);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 ```
 
 ## 🚀 Deployment
 
-### **Option 1: Deploy to Render/Heroku**
-1. **Prepare for deployment**:
-   ```bash
-   npm install --production
-   ```
+### **Deployment Steps**
+1. **Set up production MongoDB:** Use MongoDB Atlas or another cloud MongoDB service
+2. **Configure environment variables:** Set all production values in your hosting platform
+3. **Get Stream.io production credentials:** Use production keys from your Stream.io dashboard
+4. **Deploy the application:** Use your preferred hosting (Render, Railway, Heroku, AWS, etc.)
 
-2. **Set environment variables** in your hosting platform:
-   - `MONGODB_URI` (production MongoDB connection string)
-   - `JWT_SECRET` (strong secret for production)
-   - `NODE_ENV=production`
-   - `CORS_ORIGIN` (your frontend URL)
+### **Production Environment Variables**
+```env
+NODE_ENV=production
+PORT=3000
+MONGODB_URI=your_production_mongodb_connection_string
+JWT_SECRET=your_strong_production_jwt_secret
+CORS_ORIGIN=https://talent-quotient-frontend.vercel.app
+STREAM_API_KEY=your_stream_production_api_key
+STREAM_API_SECRET=your_stream_production_api_secret
+STREAM_APP_ID=your_stream_app_id
+```
 
-3. **Deploy to Render**:
-   - Create new Web Service
-   - Connect GitHub repository
-   - Set start command: `npm start`
-   - Configure environment variables
-
-### **Option 2: Docker Deployment**
+### **Docker Deployment**
 ```dockerfile
-# Dockerfile for Talent Quotient Backend
 FROM node:18-alpine
-
 WORKDIR /app
-
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci --only=production
-
-# Copy application code
 COPY . .
-
-# Expose port
 EXPOSE 3000
-
-# Start the application
 CMD ["npm", "start"]
-```
-
-### **Option 3: PM2 Process Manager**
-```bash
-# Install PM2 globally
-npm install -g pm2
-
-# Start application with PM2
-pm2 start server.js --name "talent-quotient-backend"
-
-# Save PM2 configuration
-pm2 save
-
-# Setup PM2 to start on system boot
-pm2 startup
-```
-
-## 🔒 Security Best Practices
-
-### **Implemented Security Measures**
-- **JWT Token Expiry**: Tokens expire after 7 days (configurable)
-- **Password Hashing**: bcryptjs for secure password storage
-- **Helmet.js**: Sets security-related HTTP headers
-- **CORS Configuration**: Restricts cross-origin requests
-- **Input Validation**: Validates and sanitizes all user inputs
-- **Environment Variables**: Sensitive data stored in .env files
-
-### **Production Security Checklist**
-- [ ] Use HTTPS in production
-- [ ] Set strong JWT secret (minimum 32 characters)
-- [ ] Enable MongoDB authentication
-- [ ] Configure firewall rules
-- [ ] Regular dependency updates
-- [ ] Implement rate limiting
-- [ ] Set up monitoring and logging
-
-## 🧪 Testing
-
-### **Running Tests**
-```bash
-# Run all tests
-npm test
-
-# Run tests with coverage
-npm run test:cov
-
-# Run tests in watch mode
-npm run test:watch
-```
-
-### **Test Structure**
-```
-tests/
-├── unit/              # Unit tests
-│   ├── controllers/   # Controller tests
-│   └── models/       # Model tests
-├── integration/       # Integration tests
-│   └── api/          # API endpoint tests
-└── fixtures/         # Test data fixtures
 ```
 
 ## 🔗 Integration with Frontend
@@ -427,14 +333,15 @@ This backend is designed to work with the **Talent Quotient Frontend**:
 
 - **Frontend Repository**: [Talent-Quotient-Frontend](https://github.com/MohammadAli-14/Talent-Quotient-Frontend)
 - **Main Repository**: [Talent-Quotient-V-2](https://github.com/MohammadAli-14/Talent-Quotient-V-2)
-- **Default Frontend URL**: `http://localhost:5173`
+- **Live Demo**: [https://talent-quotient-frontend.vercel.app/](https://talent-quotient-frontend.vercel.app/)
 
-### **Required Frontend Configuration**
-```env
-# Frontend .env file
-VITE_API_URL=http://localhost:3000/api
-VITE_WS_URL=ws://localhost:3000
-```
+### **Frontend Connection Flow**
+1. Frontend authenticates with backend to get JWT token
+2. Frontend requests Stream.io token from backend
+3. Frontend initializes Stream.io client with the token
+4. Frontend uses:
+   - **Backend API** for session data and business logic
+   - **Stream.io SDK** for all real-time features (chat, video, collaboration)
 
 ## 🤝 Contributing
 
@@ -474,17 +381,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Express.js Team** for the minimalist web framework
 - **MongoDB** for the flexible NoSQL database
-- **Socket.io** for real-time communication capabilities
+- **Stream.io** for the comprehensive chat and video platform
 - **All Contributors** who have helped shape this project
 
-## 🔗 Important Links
-
-- **Backend Repository**: [Talent-Qutotient-Backend](https://github.com/MohammadAli-14/Talent-Qutotient-Backend)
-- **Frontend Repository**: [Talent-Quotient-Frontend](https://github.com/MohammadAli-14/Talent-Quotient-Frontend)
-- **Main Full-Stack Repo**: [Talent-Quotient-V-2](https://github.com/MohammadAli-14/Talent-Quotient-V-2)
-- **Live Demo Frontend**: [https://talent-quotient-frontend.vercel.app/](https://talent-quotient-frontend.vercel.app/)
-
 ---
+
 <div align="center">
 
 **Built with ❤️ by [Mohammad Ali](https://github.com/MohammadAli-14)**
@@ -493,4 +394,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 </div>
 
-**Note**: This backend API requires MongoDB to be running and properly configured. Ensure all environment variables are set before starting the server. For production deployment, use strong secrets, enable HTTPS, and implement proper monitoring and logging.
+**Note**: This backend API requires MongoDB and Stream.io credentials to be properly configured. Ensure all environment variables are set before starting the server. For production deployment, use strong secrets, enable HTTPS, and implement proper monitoring and logging.
